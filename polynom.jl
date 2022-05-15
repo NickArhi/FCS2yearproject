@@ -1,38 +1,18 @@
 using Symbolics
+using SymbolicUtils
 #= x' = exp(x+exp(x^2+x))=# 
-coun = 0
-@variables t, x(t) 
+#@syms x(t::Real)::Num
+@variables x
 ex_var = []
+test = []
 initial_expr = exp(x + exp(x+x^2)) + exp(x + x^2)
 expr_expr = Symbolics.toexpr(initial_expr)
 oper_expr = Symbolics.operation(expr_expr)
 arg_expr = arguments(expr_expr)
 
 
-
-
-#=function DFS_(l::Any)
-    println("зашел")
-    global coun += 1
-    if (typeof(l) == Symbol) ||  (typeof(l) == Int64)
-        println(l)
-        return 0
-    end
-    if typeof(l) == Num
-        println(l)
-    else typeof(l) == Int64
-        println(l)
-    end
-    line = arguments(Symbolics.toexpr(l))
-    for i in line
-        DFS_(i)
-    end
-    return nothing
-end=#
-
-
 function DFS_(expression::Any, sub_list)                                      #Here we represent our equation as a tree and 
-    if (typeof(expression) == Symbol) ||  (typeof(expression) == Int64)     #search for correct substitutions
+    if (typeof(expression) == Symbol) ||  (typeof(expression) == Int64)       #search for correct substitutions
         println(expression)
         return 0
     end
@@ -54,26 +34,23 @@ end
   
 DFS_(initial_expr, ex_var)
 ex_var = unique(ex_var)
-print(ex_var)
 
 
-....
-function Subst_(inp)
-    D = Differential(t)
+D = Differential(x)
+
+
+function Subst_(inp, initial_expr::Any)
+    result = []
+    subs = []
     for i in inp
-        println(i)
-        simplify(expand_derivatives(D(i)))
-        println(i)
+        push!(result, simplify(expand_derivatives(D(eval(i))))*initial_expr)
     end
-    return nothing
+    
+    return result
 end
 
-Subst_(ex_var)
+varl = Subst_(ex_var, initial_expr)
 
+DFS_(varl[2], test)
 
-
-#=function operations(l::Any)
-    for i in DFS_(l)
-        if (Symbiolics.operation(l) = exp)
-            
-end=#
+vars[Symbol("z$i") for i in 1:100]
