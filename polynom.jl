@@ -3,15 +3,14 @@ using SymbolicUtils
 using LinearAlgebra
 #= x' = exp(x+exp(x^2+x))=# 
 @variables x
-ex_var = []
-test = []
 initial_expr = exp(x + exp(x+x^2)) + exp(x + x^2)
 expr_expr = Symbolics.toexpr(initial_expr)
-oper_expr = Symbolics.operation(expr_expr)
-arg_expr = arguments(expr_expr)
 counter = 0
+cnt = 0
 
+D = Differential(x)
 substdict = Dict{Any, Any}()
+derivatives_subst_dict = Dict{Any, Any}()
 
 function substsearch(substdict, expression, i)
     if typeof(expression) <: Int
@@ -27,15 +26,10 @@ function substsearch(substdict, expression, i)
         i = i + 1
         substsearch(substdict, expr, i)
     end
-    if !(x in keys(substdict))
-        i = i + 1
-        substdict[Symbolics.toexpr(x)] = Symbol("z$i")
-    end
 end
 
-substsearch(substdict, expr_expr, counter)
 
-function Subst_(inp, initial_expr::Any) 
+function Derivative_func(inp, initial_expr::Any) 
     result = []
     for i in inp
         push!(result, dot(simplify(expand_derivatives(D(eval(i)))),initial_expr))
@@ -43,9 +37,6 @@ function Subst_(inp, initial_expr::Any)
     return result
 end
 
-D = Differential(x)
-
-derivatives_subst = Subst_(keys(substdict), initial_expr)
 
 function substchange(expression, substdict)
     if typeof(expression) <: Int
@@ -58,10 +49,19 @@ function substchange(expression, substdict)
     return Expr(:call, operation(expression), tree...)
 end
 
+substsearch(substdict, expr_expr, counter)
+
+derivatives_subst = Derivative_func(keys(substdict), initial_expr)
+
+for i in derivatives_subst
+    substsearch(derivatives_subst_dict, Symbolics.toexpr(i), cnt)
+end
+
+derivatives_subst = Derivative_func(keys(derivatives_subst_dict), initial_expr)
 
 result = []
 for i in derivatives_subst
-    push!(result,substchange(Symbolics.toexpr(i), substdict))
+    push!(result,substchange(Symbolics.toexpr(i), derivatives_subst_dict))
 end
 
 result
