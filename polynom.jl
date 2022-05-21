@@ -1,7 +1,7 @@
 using Symbolics
 using SymbolicUtils
+using LinearAlgebra
 #= x' = exp(x+exp(x^2+x))=# 
-#@syms x(t::Real)::Num
 @variables x
 ex_var = []
 test = []
@@ -9,48 +9,59 @@ initial_expr = exp(x + exp(x+x^2)) + exp(x + x^2)
 expr_expr = Symbolics.toexpr(initial_expr)
 oper_expr = Symbolics.operation(expr_expr)
 arg_expr = arguments(expr_expr)
+counter = 0
 
+substdict = Dict{Any, Any}()
 
-function DFS_(expression::Any, sub_list)                                      #Here we represent our equation as a tree and 
-    if (typeof(expression) == Symbol) ||  (typeof(expression) == Int64)       #search for correct substitutions
-        println(expression)
-        return 0
+function substsearch(substdict, expression, i)
+    if typeof(expression) <: Int
+        return
     end
-    if typeof(expression) == Num
-        println(expression)
-    else typeof(expression) == Int64 
-        println(expression)
+    if (typeof(expression) == Symbol) || (operation(expression) == exp)
+        if !(expression in keys(substdict))
+            substdict[expression] = Symbol("z$i")
+        end
+        return
     end
-    line2 = operation(Symbolics.toexpr(expression))
-    line = arguments(Symbolics.toexpr(expression))
-    if (line2 == exp)
-        push!(sub_list, expression)
+    for expr in arguments(expression)
+        i = i + 1
+        substsearch(substdict, expr, i)
     end
-    for i in line
-        DFS_(i, sub_list)
+    if !(x in keys(substdict))
+        i = i + 1
+        substdict[Symbolics.toexpr(x)] = Symbol("z$i")
     end
-    return nothing
 end
-  
-DFS_(initial_expr, ex_var)
-ex_var = unique(ex_var)
 
+substsearch(substdict, expr_expr, counter)
 
-D = Differential(x)
-
-
-function Subst_(inp, initial_expr::Any)
+function Subst_(inp, initial_expr::Any) 
     result = []
-    subs = []
     for i in inp
-        push!(result, simplify(expand_derivatives(D(eval(i))))*initial_expr)
+        push!(result, dot(simplify(expand_derivatives(D(eval(i)))),initial_expr))
     end
-    
     return result
 end
 
-varl = Subst_(ex_var, initial_expr)
+D = Differential(x)
 
-DFS_(varl[2], test)
+derivatives_subst = Subst_(keys(substdict), initial_expr)
 
-vars[Symbol("z$i") for i in 1:100]
+function substchange(expression, substdict)
+    if typeof(expression) <: Int
+        return expression
+    end
+    if (typeof(expression) == Symbol) || (operation(expression) == exp)
+        return substdict[expression]
+    end
+    new_tree = [substchange(new_expression, substdict) for new_expression in arguments(expression)]
+    return Expr(:call, operation(expression), new_tree...)
+end
+
+
+result = []
+for i in derivatives_subst
+    push!(result,substchange(Symbolics.toexpr(i), substdict))
+end
+
+result
