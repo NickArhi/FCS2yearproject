@@ -1,67 +1,62 @@
 using Symbolics
-using SymbolicUtils
-using LinearAlgebra
+using Reduce
 #= x' = exp(x+exp(x^2+x))=# 
-@variables x
+@variables x 
 ex_var = []
-test = []
-initial_expr = exp(x + exp(x+x^2)) + exp(x + x^2)
-expr_expr = Symbolics.toexpr(initial_expr)
-oper_expr = Symbolics.operation(expr_expr)
-arg_expr = arguments(expr_expr)
-counter = 0
+initial_expression = exp(x + exp(x+x^2)) + exp(x + x^2)
+expr_expression = Symbolics.toexpr(initial_expression)
+oper_expression = Symbolics.operation(expr_expression)
+argum_expression = arguments(expr_expression)
 
-substdict = Dict{Any, Any}()
 
-function substsearch(substdict, expression, i)
-    if typeof(expression) <: Int
-        return
+#=function DFS_(l::Any)
+    println("зашел")
+    global coun += 1
+    if (typeof(l) == Symbol) ||  (typeof(l) == Int64)
+        println(l)
+        return 0
     end
-    if (typeof(expression) == Symbol) || (operation(expression) == exp)
-        if !(expression in keys(substdict))
-            substdict[expression] = Symbol("z$i")
-        end
-        return
+    if typeof(l) == Num
+        println(l)
+    else typeof(l) == Int64
+        println(l)
     end
-    for expr in arguments(expression)
-        i = i + 1
-        substsearch(substdict, expr, i)
+    line = arguments(Symbolics.toexpr(l))
+    for i in line
+        DFS_(i)
     end
-    if !(x in keys(substdict))
-        i = i + 1
-        substdict[Symbolics.toexpr(x)] = Symbol("z$i")
+    return nothing
+end=#
+
+
+function DFS_(express::Any, ex_var)                                   #Here we represent our initial expression as a tree and use search 
+    if (typeof(express) == Symbol) ||  (typeof(express) == Int64)  #in order to detect our substitutions 
+        println(express)
+        return 0
     end
+    if typeof(express) == Num
+        println(express)
+    else typeof(express) == Int64 
+        println(express)
+    end
+    oper_express = operation(Symbolics.toexpr(express))
+    arg_express = arguments(Symbolics.toexpr(express))
+    if (oper_express == eval(exp))
+        push!(ex_var, eval(express))
+    end
+    for i in arg_express
+        DFS_(i, ex_var)
+    end
+    return nothing
 end
-
-substsearch(substdict, expr_expr, counter)
-
-function Subst_(inp, initial_expr::Any) 
-    result = []
-    for i in inp
-        push!(result, dot(simplify(expand_derivatives(D(eval(i)))),initial_expr))
-    end
-    return result
-end
-
-D = Differential(x)
-
-derivatives_subst = Subst_(keys(substdict), initial_expr)
-
-function substchange(expression, substdict)
-    if typeof(expression) <: Int
-        return expression
-    end
-    if (typeof(expression) == Symbol) || (operation(expression) == exp)
-        return substdict[expression]
-    end
-    new_tree = [substchange(new_expression, substdict) for new_expression in arguments(expression)]
-    return Expr(:call, operation(expression), new_tree...)
-end
+  
+DFS_(initial_expression, ex_var)
+ex_var = unique(ex_var)
+print(ex_var)
 
 
-result = []
-for i in derivatives_subst
-    push!(result,substchange(Symbolics.toexpr(i), substdict))
-end
-
-result
+#=function operations(l::Any)
+    for i in DFS_(l)
+        if (Symbiolics.operation(l) = exp)
+            
+end=#
