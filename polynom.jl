@@ -5,14 +5,19 @@ using LinearAlgebra
 @variables x
 initial_expr = exp(x + exp(x+x^2)) + exp(x + x^2)
 expr_expr = Symbolics.toexpr(initial_expr)
-counter = 0
-cnt = 0
+
 
 D = Differential(x)
 substdict = Dict{Any, Any}()
 derivatives_subst_dict = Dict{Any, Any}()
 
-function substsearch(substdict, expression, i)
+function normalization_of_z(dict)
+    for (i,f) in enumerate(keys(dict))
+        dict[f] = Symbol("z$i")
+    end
+end
+
+function substsearch(substdict, expression)
     if typeof(expression) <: Int
         return
     end
@@ -23,8 +28,7 @@ function substsearch(substdict, expression, i)
         return
     end
     for expr in arguments(expression)
-        i = i + 1
-        substsearch(substdict, expr, i)
+        substsearch(substdict, expr)
     end
 end
 
@@ -49,13 +53,15 @@ function substchange(expression, substdict)
     return Expr(:call, operation(expression), tree...)
 end
 
-substsearch(substdict, expr_expr, counter)
+substsearch(substdict, expr_expr)
 
 derivatives_subst = Derivative_func(keys(substdict), initial_expr)
 
 for i in derivatives_subst
-    substsearch(derivatives_subst_dict, Symbolics.toexpr(i), cnt)
+    substsearch(derivatives_subst_dict, Symbolics.toexpr(i))
 end
+
+normalization_of_z(derivatives_subst_dict)
 
 derivatives_subst = Derivative_func(keys(derivatives_subst_dict), initial_expr)
 
