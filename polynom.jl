@@ -2,12 +2,11 @@ using Symbolics
 using SymbolicUtils
 using LinearAlgebra
 #= x' = exp(x+exp(x^2+x))=# 
-@variables x
-initial_expr = exp(x + exp(x+x^2)) + exp(x + x^2)
-expr_expr = Symbolics.toexpr(initial_expr)
+var_arr = @variables x, y
+initial_expr = [exp(x+y),exp(exp(x+y))]  #=exp(x + exp(x+x^2)) + exp(x + x^2)=#
+expr_expr = Symbolics.toexpr.(initial_expr)
 
-
-D = Differential(x)
+result = []
 substdict = Dict{Any, Any}()
 derivatives_subst_dict = Dict{Any, Any}()
 
@@ -33,10 +32,16 @@ function substsearch(substdict, expression)
 end
 
 
-function Derivative_func(inp, initial_expr::Any) 
+function Derivative_func(derivat::Any, initial_expr::Any, variables::Any) 
     result = []
-    for i in inp
-        push!(result, dot(simplify(expand_derivatives(D(eval(i)))),initial_expr))
+    k = length(initial_expr)-length(var_arr)
+    if k>0
+        for i in 1:k
+            push!(variables, 1)
+        end
+    end
+    for i in derivat
+        push!(result, dot(Symbolics.gradient(eval(i),variables), eval.(initial_expr)))
     end
     return result
 end
@@ -53,19 +58,20 @@ function substchange(expression, substdict)
     return Expr(:call, operation(expression), tree...)
 end
 
-substsearch(substdict, expr_expr)
+for i in expr_expr
+    substsearch(substdict, i)
+end
 
-derivatives_subst = Derivative_func(keys(substdict), initial_expr)
+derivatives_subst = Derivative_func(keys(substdict), initial_expr, var_arr)
 
 for i in derivatives_subst
     substsearch(derivatives_subst_dict, Symbolics.toexpr(i))
 end
 
 normalization_of_z(derivatives_subst_dict)
+derivatives_subst_dict
+derivatives_subst = Derivative_func(keys(derivatives_subst_dict), initial_expr, var_arr)
 
-derivatives_subst = Derivative_func(keys(derivatives_subst_dict), initial_expr)
-
-result = []
 for i in derivatives_subst
     push!(result,substchange(Symbolics.toexpr(i), derivatives_subst_dict))
 end
