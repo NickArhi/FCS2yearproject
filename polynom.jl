@@ -1,9 +1,8 @@
 using Symbolics
 using SymbolicUtils
 using LinearAlgebra
-#= x' = exp(x+exp(x^2+x))=# 
 var_arr = @variables x, y
-initial_expr = [exp(x+y),exp(exp(x+y))]  #=exp(x + exp(x+x^2)) + exp(x + x^2)=#
+initial_expr = [exp(x+y),exp(exp(x*y))]
 expr_expr = Symbolics.toexpr.(initial_expr)
 
 result = []
@@ -22,7 +21,7 @@ function substsearch(substdict, expression)
     end
     if (typeof(expression) == Symbol) || (operation(expression) == exp)
         if !(expression in keys(substdict))
-            substdict[expression] = Symbol("z$i")
+            substdict[expression] = Symbol("z")
         end
         return
     end
@@ -72,8 +71,10 @@ normalization_of_z(derivatives_subst_dict)
 derivatives_subst_dict
 derivatives_subst = Derivative_func(keys(derivatives_subst_dict), initial_expr, var_arr)
 
+
 for i in derivatives_subst
     push!(result,substchange(Symbolics.toexpr(i), derivatives_subst_dict))
 end
 
+derivatives_subst_dict 
 result
