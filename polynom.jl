@@ -24,7 +24,7 @@ function substsearch!(substdict, expression)
     if typeof(expression) <: Int
         return
     end
-    if (typeof(expression) == Symbol) || (operation(expression) == exp)
+    if (typeof(expression) == Symbol) || (operation(expression) in [sin, cos, exp])
         if !(expression in keys(substdict))
             substdict[expression] = Symbol("z")
         end
@@ -66,7 +66,7 @@ function substchange(expression, substdict)
     if typeof(expression) <: Int
         return expression
     end
-    if (typeof(expression) == Symbol) || (operation(expression) == exp)
+    if (typeof(expression) == Symbol) || (operation(expression) in [sin, cos, exp])
         return substdict[expression]
     end
     tree = [substchange(substitution, substdict) for substitution in arguments(expression)]
