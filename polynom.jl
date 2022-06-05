@@ -18,7 +18,7 @@ end
 """ 
             substsearch!(substdict, expression)
         Input: get dictionary,in which functions(our future substitutions) are added, which are extracted from system(expression).
-        Output: Found substitutions are pushed into dictionary.
+        Output: Find substitutions are push them into dictionary.
 """
 function substsearch!(substdict, expression)
     if typeof(expression) <: Int
@@ -101,7 +101,7 @@ function polynomialize(eqs)
     """ 
         Below data structures are presented, which will be used futher:
    result - final array, with transformation of initial ODE system into polynomic representation(f(z_i)). 
-   substdict - is temporary dictionary, which is used to store some of the potential changes.
+   substdict - is temporary dictionary, which is used to store some of the potential substitutions.
    derivatives_subst_dict - is dictionary, where substitutions are defined.
    """
     result = []
@@ -131,5 +131,3 @@ function polynomialize(eqs)
     )
 end
 
-eqs = Dict(x => exp(exp(x*y)), y => exp(x+y))
-print_ode(polynomialize(eqs))
