@@ -7,6 +7,7 @@ calculations, there are several levels of "convenience"of the function f (x), wh
 2. rational functions (that is, polynomial relations)
 3. polynomials
 4. polynomials of degree at most 2
+
 Depending on the specific situation, it can be very useful to "embed"a system into a system with
 a higher level of goodness. polynomialization is a transformation of a system of ODEs into a system
 of ODEs with polynomial right-hand via the introduction of new variables. Such transformations have
